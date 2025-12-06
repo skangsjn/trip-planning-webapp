@@ -1,0 +1,196 @@
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <title>Google Maps with Markers</title>-->
+<!--    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&callback=initMap" async defer></script>-->
+<!--    <script type="text/javascript">-->
+<!--      function initMap() {-->
+<!--        var map = new google.maps.Map(document.getElementById('map'), {-->
+<!--          zoom: 10,-->
+<!--          center: {lat: 35.6895, lng: 139.6917} // Center the map around Tokyo-->
+<!--        });-->
+
+<!--        var locations = {{ locations|tojson }};-->
+
+<!--        for (var i = 0; i < locations.length; i++) {-->
+<!--          var marker = new google.maps.Marker({-->
+<!--            position: {lat: locations[i][1], lng: locations[i][2]},-->
+<!--            map: map,-->
+<!--            title: locations[i][0]-->
+<!--          });-->
+<!--        }-->
+<!--      }-->
+<!--    </script>-->
+<!--</head>-->
+<!--<body>-->
+<!--    <h1>Map of Places to Visit in Japan</h1>-->
+<!--    <nav>-->
+<!--        <ul>-->
+<!--            <li><a href="{{ url_for('home') }}">Home</a></li>-->
+<!--            <li><a href="{{ url_for('calendar_page') }}">Calendar</a></li>-->
+<!--            <li><a href="{{ url_for('page2') }}">Page 2</a></li>-->
+<!--        </ul>-->
+<!--    </nav>-->
+<!--    <div id="map" style="height: 600px; width: 100%;"></div>-->
+<!--</body>-->
+<!--</html>-->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Map of Places to Visit in Japan</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <!-- Basic page styling -->
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #050816;
+      color: #e5e7eb;
+    }
+
+    header {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #020617;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 12px;
+      padding: 0;
+      margin: 0;
+    }
+
+    nav a {
+      color: #e5e7eb;
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    nav a:hover {
+      border-color: #f9fafb;
+    }
+
+    #map {
+      height: calc(100vh - 64px);
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Map of Places to Visit in Japan</h1>
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('calendar_page') }}">Calendar</a></li>
+<!--        <li><a href="{{ url_for('page2') }}">Page 2</a></li>-->
+      </ul>
+    </nav>
+  </header>
+
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script type="text/javascript">
+    // locations = [[name, lat, lng, city, cluster], ...]
+    const locations = {{ locations | tojson }};
+
+    // Center map roughly on Tokyo
+    const map = L.map('map').setView([35.6895, 139.6917], 10);
+
+    // OpenStreetMap tiles (no key required)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Color palette for clusters
+    const colorPalette = [
+      '#ef4444', // red
+      '#22c55e', // green
+      '#3b82f6', // blue
+      '#eab308', // yellow
+      '#a855f7', // purple
+      '#ec4899', // pink
+      '#14b8a6', // teal
+      '#f97316', // orange
+      '#8b5cf6', // violet
+      '#facc15', // amber
+    ];
+
+    // Map of clusterId -> color
+    const clusterColors = {};
+
+    function getColorForCluster(clusterId) {
+      if (!clusterColors[clusterId]) {
+        const index = Object.keys(clusterColors).length % colorPalette.length;
+        clusterColors[clusterId] = colorPalette[index];
+      }
+      return clusterColors[clusterId];
+    }
+
+    // Add markers
+    locations.forEach(loc => {
+      const name   = loc[0];
+      const lat    = loc[1];
+      const lng    = loc[2];
+      const city   = loc[3];
+      const cluster = loc[4];
+
+      // Skip if coordinates missing
+      if (lat == null || lng == null) return;
+
+      const clusterId   = `${city}${cluster}`;              // e.g. "Tokyo3"
+      const groupLabel  = `${city} – Cluster ${cluster}`;   // nice label for popup
+      const color       = getColorForCluster(clusterId);
+
+      // Use a colored circle marker so each cluster has its own color
+      const marker = L.circleMarker([lat, lng], {
+        radius: 7,
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.9,
+        weight: 2,
+      }).addTo(map);
+
+      // Popup shows name + which group/cluster it belongs to
+      marker.bindPopup(`
+        <strong>${name}</strong><br>
+        ${groupLabel}
+      `);
+    });
+  </script>
+</body>
+</html>
+

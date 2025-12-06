@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Japan Trip Planner</title>
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: rgba(15, 23, 42, 0.96);
+      --accent: #e50914;
+      --accent-soft: rgba(229, 9, 20, 0.15);
+      --border-subtle: rgba(148, 163, 184, 0.45);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow-soft: 0 18px 55px rgba(15, 23, 42, 0.9);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 40%, #000 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .beta-note {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-radius: 8px;
+      border: 1px dashed rgba(248, 250, 252, 0.25);
+      padding: 8px 10px;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .brand-title {
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav a {
+      font-size: 0.8rem;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text-main);
+    }
+
+    nav a:hover {
+      border-color: #f9fafb;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-elevated);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+      padding: 18px 20px 20px;
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .panel-heading-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .panel-main-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-soft);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-muted);
+    }
+
+    .alert {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+    }
+
+    .alert-error {
+      border-color: rgba(248, 113, 113, 0.9);
+      background: rgba(248, 113, 113, 0.12);
+      color: #fecaca;
+    }
+
+    form.date-form {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 18px;
+      align-items: flex-end;
+    }
+
+    @media (max-width: 700px) {
+      form.date-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--text-muted);
+    }
+
+    .field-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 8px 9px;
+      font-size: 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+    }
+
+    input[type="date"]:focus {
+      outline: none;
+      border-color: #f9fafb;
+      box-shadow: 0 0 0 1px rgba(248, 250, 252, 0.9);
+    }
+
+    button[type="submit"] {
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), #f97316);
+      color: #f9fafb;
+      cursor: pointer;
+      justify-self: flex-start;
+    }
+
+    button[type="submit"]:hover {
+      filter: brightness(1.05);
+    }
+
+    .trip-meta {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .trip-meta strong {
+      color: #e5e7eb;
+    }
+
+    .trip-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      align-items: center;
+    }
+
+    .meta-chip {
+      font-size: 0.75rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    .meta-chip.accent {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      font-size: 0.82rem;
+    }
+
+    .time-card {
+      padding: 10px 11px;
+      border-radius: 10px;
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      background: radial-gradient(circle at top, rgba(30, 64, 175, 0.4), rgba(15, 23, 42, 0.95));
+    }
+
+    .time-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .time-value {
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+
+    .time-diff {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-mark">JP</div>
+        <div>
+          <div class="brand-title">Japan Trip Planner</div>
+          <div class="tagline">Choose your dates, then plan your next adventure!</div>
+        </div>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="{{ url_for('home') }}">Home</a></li>
+          <li><a href="{{ url_for('calendar_page') }}">Calendar</a></li>
+<!--          <li><a href="{{ url_for('page2') }}">Page 2</a></li>-->
+          <li><a href="{{ url_for('map_page') }}">Map</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <!-- Left: date range picker -->
+      <section class="panel">
+        <div class="panel-heading-row">
+          <div>
+            <div class="panel-title">Step 1</div>
+            <div class="panel-main-title">Pick your trip window</div>
+            <div class="panel-subtitle">
+              Use the mini calendars to set your start and end dates.
+            </div>
+          </div>
+          <div class="pill">Dates synced with the calendar view</div>
+        </div>
+
+        {% if error_message %}
+        <div class="alert alert-error">
+          {{ error_message }}
+        </div>
+        {% endif %}
+
+        <form method="post" class="date-form" novalidate>
+          <div class="field-group">
+            <label class="field-label" for="start_date">Start date</label>
+            <input
+              type="date"
+              id="start_date"
+              name="start_date"
+              required
+            >
+            <div class="field-hint">Click to open the mini calendar</div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="end_date">End date</label>
+            <input
+              type="date"
+              id="end_date"
+              name="end_date"
+              required
+            >
+            <div class="field-hint">End date must be on or after the start date</div>
+          </div>
+
+          <button type="submit">Save dates</button>
+        </form>
+
+        <div class="trip-meta">
+          {% if start_date and end_date %}
+            <div class="trip-meta-row">
+              <span class="meta-chip accent">
+                {{ start_date }} → {{ end_date }}
+              </span>
+              {% if days_until_trip is not none %}
+                {% if days_until_trip > 0 %}
+                  <span class="meta-chip">
+                    Your trip is in <strong>{{ days_until_trip }}</strong> day{% if days_until_trip != 1 %}s{% endif %}.
+                  </span>
+                {% elif days_until_trip == 0 %}
+                  <span class="meta-chip">
+                    Your trip <strong>starts today</strong> 🎉
+                  </span>
+                {% endif %}
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="trip-meta-row">
+              <span class="meta-chip">
+                No dates saved yet. Pick a range to unlock the calendar view.
+              </span>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- Right: time info / summary -->
+      <section class="panel">
+        <div class="panel-title">Step 2</div>
+        <div class="panel-main-title" style="margin-bottom: 8px;">
+          Time zones & overview
+        </div>
+        <div class="panel-subtitle" style="margin-bottom: 14px;">
+          Get a feel for the time difference before you start dragging clusters onto your trip calendar.
+        </div>
+
+        <div class="time-grid">
+          <div class="time-card">
+            <div class="time-label">New York (EST)</div>
+            <div class="time-value">{{ local_time }}</div>
+          </div>
+          <div class="time-card">
+            <div class="time-label">Japan (JST)</div>
+            <div class="time-value">{{ japan_time }}</div>
+          </div>
+        </div>
+
+        <div class="time-diff">
+          Time difference: {{ time_difference_str }}
+        </div>
+
+        <div class="beta-note">
+          BETA Version: App currently only works for 13 days for a preset dataset.
+          Missing access to Google Maps API reduces functionality and current version uses Leaflet.
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Set min date = today on the HTML date inputs so you can't pick past dates in the browser UI
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.setAttribute('min', today);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Japan Trip Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Simple, modern styling -->
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: rgba(15, 23, 42, 0.92);
+      --accent: #e50914;
+      --accent-soft: rgba(229, 9, 20, 0.16);
+      --border-subtle: rgba(148, 163, 184, 0.4);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --shadow-soft: 0 12px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 40%, #000 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .brand-title {
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .top-link {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-elevated);
+      border-radius: var(--radius-lg);
+      padding: 18px 18px 20px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Cluster list (left side) */
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .chip {
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px dashed var(--accent-soft);
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .cluster-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 4px;
+      min-height: 80px;
+    }
+
+    .cluster-card {
+      background: radial-gradient(circle at top left, rgba(248, 250, 252, 0.04), rgba(15, 23, 42, 0.96));
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, border-color 0.12s ease-out;
+    }
+
+    .cluster-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.8);
+      border-color: rgba(243, 244, 246, 0.75);
+    }
+
+    .cluster-card.dragging {
+      opacity: 0.9;
+      border-style: dashed;
+      border-color: var(--accent);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+    }
+
+    .cluster-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      color: var(--accent);
+    }
+
+    .cluster-main {
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cluster-main::before {
+      content: "📍";
+      font-size: 0.8rem;
+    }
+
+    .cluster-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Calendar (right side) */
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .calendar-title-main {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .calendar-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-pill {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+    }
+
+    .legend-pill.start {
+      background: rgba(74, 222, 128, 0.18);
+      border-color: rgba(34, 197, 94, 0.9);
+    }
+
+    .legend-pill.range {
+      background: rgba(59, 130, 246, 0.12);
+      border-color: rgba(59, 130, 246, 0.7);
+    }
+
+    .legend-pill.end {
+      background: rgba(248, 113, 113, 0.16);
+      border-color: rgba(248, 113, 113, 0.9);
+    }
+
+    .calendar-months {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-top: 10px;
+    }
+
+    .calendar-month {
+      border-radius: 12px;
+      border: 1px solid rgba(30, 64, 175, 0.8);
+      background: radial-gradient(circle at top, rgba(30, 64, 175, 0.3), rgba(15, 23, 42, 1));
+      padding: 10px 12px 12px;
+    }
+
+    .month-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+    }
+
+    .month-label span:first-child {
+      font-weight: 500;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: var(--text-muted);
+    }
+
+    .calendar-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.78rem;
+    }
+
+    .calendar-row {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .weekday {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      padding-bottom: 4px;
+    }
+
+    .calendar-day {
+      min-height: 64px;
+      border-radius: 8px;
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      background: rgba(15, 23, 42, 0.86);
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 4px;
+      position: relative;
+      transition: border-color 0.12s ease-out,
+                  background 0.12s ease-out,
+                  box-shadow 0.12s ease-out;
+    }
+
+    .calendar-day.empty {
+      border-style: dashed;
+      border-color: rgba(30, 64, 175, 0.4);
+      background: transparent;
+    }
+
+    .calendar-day[data-date]:hover {
+      border-color: rgba(248, 250, 252, 0.9);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
+    }
+
+    .calendar-day.drop-target {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.9);
+    }
+
+    .date-number {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(226, 232, 240, 0.95);
+    }
+
+    .highlight-start .date-number {
+      color: #4ade80;
+    }
+
+    .highlight-end .date-number {
+      color: #f97373;
+    }
+
+    .highlight-range {
+      background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.14),
+        rgba(15, 23, 42, 0.95)
+      );
+    }
+
+    .assignments {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 100%;
+    }
+
+    .assignment-pill {
+      font-size: 0.68rem;
+      padding: 3px 6px;
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.18);
+      border: 1px solid rgba(45, 212, 191, 0.7);
+      color: rgba(240, 249, 255, 0.96);
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .assignment-pill:hover {
+      opacity: 0.9;
+    }
+
+    .helper-text {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .details-panel {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.4);
+    }
+
+    .details-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .details-heading {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .details-empty {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .details-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .details-item {
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .details-item-main {
+      font-weight: 500;
+    }
+
+    .details-item-tag {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    details-section {
+      margin-top: 10px;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.3);
+    }
+
+    .details-section:first-of-type {
+      margin-top: 6px;
+      border-top: none;
+      padding-top: 0;
+    }
+
+    .details-section-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-mark">JP</div>
+        <div>
+          <div class="brand-title">Trip Blocks</div>
+          <div class="tagline">Drag city clusters onto your travel days</div>
+        </div>
+      </div>
+      <a class="top-link" href="{{ url_for('home') }}">Back to dates</a>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: cluster blocks -->
+      <section class="panel">
+        <h2 class="panel-title">City / cluster blocks</h2>
+        <div class="chip-row">
+          <span class="chip">Drag a block onto a date to assign it</span>
+          <span class="chip">Drag a pill back here to unassign</span>
+        </div>
+        <div class="cluster-list">
+          {% for cluster in city_clusters %}
+          <article class="cluster-card"
+                   draggable="true"
+                   data-cluster-id="{{ cluster.id }}"
+                   data-label="{{ cluster.label }}"
+                   data-city="{{ cluster.city }}"
+                   data-cluster="{{ cluster.cluster }}">
+            <div class="cluster-tag">{{ cluster.city }}</div>
+            <div class="cluster-main">Cluster {{ cluster.cluster }}</div>
+            <div class="cluster-meta">{{ cluster.count }} places in this area</div>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- RIGHT: calendar -->
+      <section class="panel">
+        <div class="calendar-header">
+          <div>
+            <div class="calendar-title-main">Trip calendar</div>
+            {% if start_date and end_date %}
+            <div class="calendar-subtitle">
+              {{ start_date }} → {{ end_date }}
+            </div>
+            {% else %}
+            <div class="calendar-subtitle">
+              Set your start and end dates on the home screen to highlight your trip window.
+            </div>
+            {% endif %}
+          </div>
+          <div class="legend">
+            <div class="legend-item">
+              <span class="legend-pill start"></span><span>Start</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-pill.range"></span><span>Trip window</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-pill end"></span><span>End</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="calendar-months">
+          {% for month in months %}
+          <section class="calendar-month">
+            <header class="month-label">
+              <span>{{ month.month_name }} {{ month.year }}</span>
+              <span class="badge">
+                Month {{ loop.index }} of {{ loop.length }}
+              </span>
+            </header>
+            <div class="calendar-grid">
+              <div class="calendar-row">
+                {% for wd in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] %}
+                <div class="weekday">{{ wd }}</div>
+                {% endfor %}
+              </div>
+
+              {% for week in month.weeks %}
+              <div class="calendar-row">
+                {% for day in week %}
+                  {% if day.date %}
+                    <div class="calendar-day {{ day.class }}" data-date="{{ day.date }}">
+                      <div class="date-number">{{ day.day }}</div>
+                      <div class="assignments"></div>
+                    </div>
+                  {% else %}
+                    <div class="calendar-day empty"></div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              {% endfor %}
+            </div>
+          </section>
+          {% endfor %}
+        </div>
+
+        <p class="helper-text">
+          Your selections are stored in your browser session.
+        </p>
+
+        <section class="details-panel">
+          <div class="details-title-row">
+            <div>
+              <div class="details-label">Cluster details</div>
+              <div class="details-heading" id="cluster-details-heading">No cluster selected</div>
+            </div>
+          </div>
+          <div id="cluster-details-empty" class="details-empty">
+            Click a cluster pill in the calendar to see the activities in that area.
+          </div>
+          <div id="cluster-details-list" class="details-list" hidden></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const itinerary = {{ itinerary | default({}) | tojson }};
+      const clusterDetails = {{ cluster_details | tojson }};
+      const detailsHeading = document.getElementById('cluster-details-heading');
+      const detailsEmpty = document.getElementById('cluster-details-empty');
+      const detailsList = document.getElementById('cluster-details-list');
+
+      /* Drag setup for cluster cards */
+      const clusterCards = document.querySelectorAll('.cluster-card');
+      const clusterListEl = document.querySelector('.cluster-list');
+
+      clusterCards.forEach(card => {
+        card.addEventListener('dragstart', event => {
+          const payload = {
+            source: 'palette',
+            clusterId: card.dataset.clusterId,
+            label: card.dataset.label
+          };
+          event.dataTransfer.setData('application/json', JSON.stringify(payload));
+          card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+      });
+
+      // Allow dragging pills back to the palette to unassign
+      if (clusterListEl) {
+        clusterListEl.addEventListener('dragover', event => {
+          event.preventDefault();
+        });
+
+        clusterListEl.addEventListener('drop', event => {
+          event.preventDefault();
+          const raw = event.dataTransfer.getData('application/json');
+          if (!raw) return;
+
+          let payload;
+          try {
+            payload = JSON.parse(raw);
+          } catch (e) {
+            return;
+          }
+
+          if (payload.source === 'calendar') {
+            const { clusterId } = payload;
+
+            // Remove this cluster from every day (and backend), then show its card again
+            removeClusterFromAllDays(clusterId, true);
+            showClusterCard(clusterId);
+          }
+        });
+      }
+
+      /* Calendar drop targets */
+      const dayCells = document.querySelectorAll('.calendar-day[data-date]');
+      dayCells.forEach(cell => {
+        cell.addEventListener('dragover', event => {
+          event.preventDefault();
+          cell.classList.add('drop-target');
+        });
+
+        cell.addEventListener('dragleave', () => {
+          cell.classList.remove('drop-target');
+        });
+
+        cell.addEventListener('drop', event => {
+          event.preventDefault();
+          cell.classList.remove('drop-target');
+
+          const raw = event.dataTransfer.getData('application/json');
+          if (!raw) return;
+
+          let payload;
+          try {
+            payload = JSON.parse(raw);
+          } catch (e) {
+            return;
+          }
+
+          const targetDate = cell.dataset.date;
+
+          if (payload.source === 'palette') {
+            // Ensure this cluster is not attached to any other day first
+            removeClusterFromAllDays(payload.clusterId, true);
+
+            // Assign this cluster to this date
+            addAssignmentToCell(cell, payload.clusterId, payload.label);
+            saveAssignment(targetDate, payload.clusterId, payload.label);
+            hideClusterCard(payload.clusterId);
+            showClusterDetails(payload.clusterId);
+          } else if (payload.source === 'calendar') {
+            // Move an already-assigned cluster to a new date
+            if (payload.date && payload.date !== targetDate) {
+              moveAssignment(payload.date, targetDate, payload.clusterId, payload.label);
+              showClusterDetails(payload.clusterId);
+            }
+          }
+        });
+      });
+
+      function addAssignmentToCell(cell, clusterId, label) {
+        const container = cell.querySelector('.assignments');
+        if (!container) return;
+
+        // avoid duplicates within a day
+        const exists = Array.from(container.children).some(
+          pill => pill.dataset.clusterId === clusterId
+        );
+        if (exists) return;
+
+        const pill = document.createElement('div');
+        pill.className = 'assignment-pill';
+        pill.dataset.clusterId = clusterId;
+        pill.textContent = label;
+        pill.title = 'Click to see activities';
+        pill.draggable = true;
+        container.appendChild(pill);
+
+        attachPillEvents(pill, cell.dataset.date);
+      }
+
+      function attachPillEvents(pill, date) {
+        // Clicking a pill now shows the list of activities instead of unassigning
+        pill.addEventListener('click', () => {
+          showClusterDetails(pill.dataset.clusterId);
+        });
+
+        pill.addEventListener('dragstart', event => {
+          const payload = {
+            source: 'calendar',
+            clusterId: pill.dataset.clusterId,
+            label: pill.textContent,
+            date: date
+          };
+          event.dataTransfer.setData('application/json', JSON.stringify(payload));
+          pill.classList.add('dragging');
+        });
+
+        pill.addEventListener('dragend', () => {
+          pill.classList.remove('dragging');
+        });
+      }
+
+      function saveAssignment(date, clusterId, label) {
+        fetch('{{ url_for("assign_cluster") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, cluster_id: clusterId, label })
+        }).catch(err => console.error(err));
+      }
+
+      function removeAssignment(date, clusterId) {
+        fetch('{{ url_for("remove_cluster") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, cluster_id: clusterId })
+        }).catch(err => console.error(err));
+      }
+
+      // Pre-populate from itinerary stored in session
+      if (itinerary) {
+        Object.entries(itinerary).forEach(([date, items]) => {
+          const cell = document.querySelector('.calendar-day[data-date="' + date + '"]');
+          if (!cell) return;
+          items.forEach(item => {
+            // Make sure only one pill per cluster in the UI when loading.
+            // We pass 'false' so we DON'T call the backend again during initial render.
+            removeClusterFromAllDays(item.cluster_id, false);
+            addAssignmentToCell(cell, item.cluster_id, item.label);
+            hideClusterCard(item.cluster_id);
+          });
+        });
+      }
+
+      function hideClusterCard(clusterId) {
+        const card = document.querySelector('.cluster-card[data-cluster-id="' + clusterId + '"]');
+        if (card) {
+          card.style.display = 'none';
+        }
+      }
+
+      function showClusterCard(clusterId) {
+        const card = document.querySelector('.cluster-card[data-cluster-id="' + clusterId + '"]');
+        if (card) {
+          card.style.display = '';
+        }
+      }
+
+      function removeClusterFromAllDays(clusterId, syncWithServer) {
+        // default is to sync with the backend
+        const shouldSync = syncWithServer !== false;
+
+        const pills = document.querySelectorAll(
+          '.assignment-pill[data-cluster-id="' + clusterId + '"]'
+        );
+
+        pills.forEach(pill => {
+          const dayCell = pill.closest('.calendar-day[data-date]');
+          if (dayCell && shouldSync) {
+            const date = dayCell.dataset.date;
+            removeAssignment(date, clusterId);
+          }
+          pill.remove();
+        });
+      }
+
+      function moveAssignment(oldDate, newDate, clusterId, label) {
+        const oldCell = document.querySelector('.calendar-day[data-date="' + oldDate + '"]');
+        if (oldCell) {
+          const container = oldCell.querySelector('.assignments');
+          if (container) {
+            const pill = Array.from(container.children).find(
+              p => p.dataset.clusterId === clusterId
+            );
+            if (pill) {
+              pill.remove();
+            }
+          }
+        }
+
+        const newCell = document.querySelector('.calendar-day[data-date="' + newDate + '"]');
+        if (newCell) {
+          addAssignmentToCell(newCell, clusterId, label);
+        }
+
+        removeAssignment(oldDate, clusterId);
+        saveAssignment(newDate, clusterId, label);
+      }
+
+      function showClusterDetails(clusterId) {
+        const activities = clusterDetails[clusterId] || [];
+
+        if (!activities.length) {
+          detailsHeading.textContent = 'No activities found for ' + clusterId;
+          detailsList.innerHTML = '';
+          detailsList.hidden = true;
+          detailsEmpty.textContent = 'No activities are associated with this cluster yet.';
+          detailsEmpty.style.display = 'block';
+          return;
+        }
+
+        const sample = activities[0];
+        detailsHeading.textContent = sample.city + ' – Cluster ' + sample.cluster;
+
+        // Group activities by category (section), not type
+        const grouped = {};
+        activities.forEach(act => {
+          const rawCategory = (act.category || 'Other').toString().trim();
+          const label = rawCategory
+            ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
+            : 'Other';
+
+          if (!grouped[label]) {
+            grouped[label] = [];
+          }
+          grouped[label].push(act);
+        });
+
+        // Sort categories alphabetically, with "Other" at the end
+        const categories = Object.keys(grouped).sort((a, b) => {
+          if (a === 'Other') return 1;
+          if (b === 'Other') return -1;
+          return a.localeCompare(b);
+        });
+
+        detailsList.innerHTML = '';
+
+        categories.forEach(category => {
+          const section = document.createElement('div');
+          section.className = 'details-section';
+
+          const title = document.createElement('div');
+          title.className = 'details-section-title';
+          title.textContent = category;
+          section.appendChild(title);
+
+          grouped[category].forEach(act => {
+            const item = document.createElement('div');
+            item.className = 'details-item';
+
+            const main = document.createElement('div');
+            main.className = 'details-item-main';
+            main.textContent = act.name;
+
+            const tag = document.createElement('div');
+            tag.className = 'details-item-tag';
+            // Keep TYPE on the right-hand side
+            if (act.type) {
+              tag.textContent = act.type;
+            } else {
+              // Fallback if type is missing
+              tag.textContent = category;
+            }
+
+            item.appendChild(main);
+            item.appendChild(tag);
+            section.appendChild(item);
+          });
+
+          detailsList.appendChild(section);
+        });
+
+        detailsEmpty.style.display = 'none';
+        detailsList.hidden = false;
+      }
+
+    });
+  </script>
+</body>
+</html>
