@@ -74,7 +74,7 @@ A typical way to use the app is:
    4. `JPN_data.py` (data cleaning + clustering script)
 2. Ensure the `data` folder contains `japan_saved_080424.json` and `additional_080424.json`. The script will load them automatically.
 3. Start the app from `app.py`
-    1. Install the required Python packages if needed (refer to `requirements`)
+    1. Install the required Python packages if needed (refer to `requirements.txt`)
 4. Open `http://localhost:5000` in your browser
 5. Plan your trip :D
 
